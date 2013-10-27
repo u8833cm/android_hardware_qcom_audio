@@ -660,12 +660,12 @@ uint32_t AudioHardware::getMvsMode(int format)
     case AudioSystem::EVRC:
         return   MVS_MODE_IS127;
         break;
-    case AudioSystem::EVRCB:
+/*    case AudioSystem::EVRCB:
         return MVS_MODE_4GV_NB;
         break;
     case AudioSystem::EVRCWB:
         return MVS_MODE_4GV_WB;
-        break;
+        break; */
     default:
         return BAD_INDEX;
     }
@@ -1500,9 +1500,9 @@ size_t AudioHardware::getInputBufferSize(uint32_t sampleRate, int format, int ch
          (format != AudioSystem::AMR_NB)     &&
          (format != AudioSystem::AMR_WB)     &&
          (format != AudioSystem::EVRC)       &&
-         (format != AudioSystem::EVRCB)      &&
+/*         (format != AudioSystem::EVRCB)      &&
          (format != AudioSystem::EVRCWB)     &&
-         (format != AudioSystem::QCELP)      &&
+*/         (format != AudioSystem::QCELP)      &&
          (format != AudioSystem::AAC)){
         ALOGW("getInputBufferSize bad format: 0x%x", format);
         return 0;
@@ -1574,11 +1574,8 @@ status_t AudioHardware::setVoiceVolume(float v)
         ALOGW("setVoiceVolume(%f) over 1.0, assuming 1.0\n", v);
         v = 1.0;
     }
-    // Added 0.4 to current volume, as in voice call Mute cannot be set as minimum volume(0.00)
-    // setting Rx volume level as 2 for minimum and 7 as max level.
-    v = 0.4 + v;
 
-    int vol = lrint(v * 5.0);
+    int vol = lrint(v * 7.0);
     ALOGD("setVoiceVolume(%f)\n", v);
     ALOGI("Setting in-call volume to %d (available range is 2 to 7)\n", vol);
 
@@ -1868,6 +1865,10 @@ status_t AudioHardware::doRouting(AudioStreamInMSM72xx *input, int outputDevice)
             new_snd_device = SND_DEVICE_CARKIT;
         } else if (outputDevices & AudioSystem::DEVICE_OUT_WIRED_HEADSET) {
             ALOGI("Routing audio to Wired Headset\n");
+            new_snd_device = SND_DEVICE_HEADSET;
+            new_post_proc_feature_mask = (ADRC_ENABLE | EQ_ENABLE | RX_IIR_ENABLE | MBADRC_ENABLE);
+        } else if (outputDevices & AudioSystem::DEVICE_OUT_WIRED_HEADPHONE) {
+            ALOGI("Routing audio to Wired Headphone\n");
             new_snd_device = SND_DEVICE_HEADSET;
             new_post_proc_feature_mask = (ADRC_ENABLE | EQ_ENABLE | RX_IIR_ENABLE | MBADRC_ENABLE);
         } else if (outputDevices & AudioSystem::DEVICE_OUT_SPEAKER) {
